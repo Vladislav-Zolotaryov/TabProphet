@@ -65,17 +65,18 @@ function onKeyDown(event) {
 	}
 }
 
-var allWindows = windowUtils.windows(null, {includePrivate:true});
-for (let window of allWindows) {
+var windows = require("sdk/windows").browserWindows;
+for (let window of windows) {
 	attachKeyListeners(window);
 }
 
-allWindows.on('open', function(window) {
+windows.on('open', function(window) {
 	console.log("Opened new window " + window);
 	attachKeyListeners(window);
 });
 
 function attachKeyListeners(window) {
-	window.addEventListener("keyup", onKeyUp, true);
-	window.addEventListener("keydown", onKeyDown, true);
+	var windowView = viewFor(window);
+	windowView.addEventListener("keyup", onKeyUp, true);
+	windowView.addEventListener("keydown", onKeyDown, true);
 }
