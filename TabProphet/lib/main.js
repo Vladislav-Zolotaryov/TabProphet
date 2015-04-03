@@ -12,22 +12,23 @@ var selectedTabs = [];
 var shiftKeyCode = 16;
 
 function regsiterOnTabClickEvent(tab) {
-  var lowLevelTab = viewFor(tab);
+  var tabView = viewFor(tab);
   var clickClojure = function(tab) { 
 	return function() {
 		onTabClick(tab);
 	}
   }
-  lowLevelTab.addEventListener("click", clickClojure(tab));
+  tabView.addEventListener("click", clickClojure(tab));
+  tab.on('ready', flushToClipboard);
 }
 
 for (let tab of tabs) {
 	regsiterOnTabClickEvent(tab);
 }
 tabs.on("open", regsiterOnTabClickEvent);
+tabs.on('ready', flushToClipboard);
 
 function onTabClick(tab) {
-	console.log(tab.url + " is activated");
 	if (shiftPressed) {
 		var tabView = viewFor(tab);
 		var index = selectedTabs.indexOf(tab);
@@ -52,14 +53,12 @@ function flushToClipboard() {
 }
 
 function onKeyUp(event) {
-	console.log("KEYUP " + event.keyCode);	
 	if (event.keyCode == shiftKeyCode) {
 		shiftPressed = false;
 	}
 }
 
 function onKeyDown(event) {
-	console.log("KEYDOWN " + event.keyCode);	
 	if (event.keyCode == shiftKeyCode) {
 		shiftPressed = true;
 	}
@@ -71,7 +70,6 @@ for (let window of windows) {
 }
 
 windows.on('open', function(window) {
-	console.log("Opened new window " + window);
 	attachKeyListeners(window);
 });
 
