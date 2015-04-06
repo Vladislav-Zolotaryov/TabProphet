@@ -5,5 +5,5 @@
   "description": "Multiple tab selection to copy multiple URLs to clipboard at once. Press shift and click on the tab you want to select.",
   "author": "Vladislav Zolotaryov",
   "license": "MPL 2.0",
-  "version": "0.1 alpha"
+  "version": "0.1_alpha"
 }
