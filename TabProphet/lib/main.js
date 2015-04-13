@@ -13,21 +13,19 @@ var urlsDelimiter = '\n';
 var copyAllTabsHotkeyCombo = "control-alt-a";
 
 function regsiterOnTabClickEvent(tab) {
-  var tabView = viewFor(tab);
   var clickClojure = function(tab) { 
 	return function() {
 		onTabClick(tab);
 	}
   }
+  var tabView = viewFor(tab);
   tabView.addEventListener("click", clickClojure(tab));
-  tab.on('ready', flushToClipboard);
 }
 
 for (let tab of tabs) {
 	regsiterOnTabClickEvent(tab);
 }
 tabs.on("open", regsiterOnTabClickEvent);
-tabs.on('ready', flushToClipboard);
 
 function onTabClick(tab) {
 	if (selectionKeyPressed) {
