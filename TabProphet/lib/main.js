@@ -1,15 +1,16 @@
-var { modelFor } = require("sdk/model/core");
 var { viewFor } = require("sdk/view/core");
-var { Style } = require('sdk/stylesheet/style');
-
+var { Hotkey } = require("sdk/hotkeys");
 var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
-var windowUtils = require("sdk/window/utils");
-var { attachTo, detachFrom } = require('sdk/content/mod');
 
-var shiftPressed = false;
+var windows = require("sdk/windows").browserWindows;
+
 var selectedTabs = [];
-var shiftKeyCode = 16;
+var selectedTabColor = 'blue';
+var selectionKeyPressed = false;
+var selectionToggleKeyCode = 16;
+var urlsDelimiter = '\n';
+var copyAllTabsHotkeyCombo = "control-alt-a";
 
 function regsiterOnTabClickEvent(tab) {
   var tabView = viewFor(tab);
@@ -29,42 +30,58 @@ tabs.on("open", regsiterOnTabClickEvent);
 tabs.on('ready', flushToClipboard);
 
 function onTabClick(tab) {
-	if (shiftPressed) {
-		var tabView = viewFor(tab);
-		var index = selectedTabs.indexOf(tab);
-		if (index > -1) {
-			selectedTabs.splice(index, 1);
-			tabView.style.color = tabView.style.previousColor;
-		} else {
-			selectedTabs.push(tab);
-			tabView.style.previousColor = tabView.style.color;
-			tabView.style.color = 'blue';
-		}
-		flushToClipboard();
+	if (selectionKeyPressed) {
+		processTab(tab);
 	}
+}
+
+function processTab(tab) {
+	var tabView = viewFor(tab);
+	var index = selectedTabs.indexOf(tab);
+	if (index > -1) {
+		selectedTabs.splice(index, 1);
+		tabView.style.color = tabView.style.previousColor;
+	} else {
+		selectedTabs.push(tab);
+		tabView.style.previousColor = tabView.style.color;
+		tabView.style.color = selectedTabColor;
+	}
+}
+
+function clearAllSelection() {
+	for (var i = 0 ; i < selectedTabs.length ; i++) {
+		var tabView = viewFor(selectedTabs[i]);
+		tabView.style.color = tabView.style.previousColor;
+	}
+	selectedTabs = [];
 }
 
 function flushToClipboard() {
 	var cliptext = '';
 	for (i = 0; i < selectedTabs.length; i++) {
-		cliptext += selectedTabs[i].url + '\n';
+		cliptext += selectedTabs[i].url + urlsDelimiter;
 	}
 	clipboard.set(cliptext);
 }
 
+function copyTabsToClipboard() {
+	flushToClipboard();
+	clearAllSelection();
+}
+
 function onKeyUp(event) {
-	if (event.keyCode == shiftKeyCode) {
-		shiftPressed = false;
+	if (event.keyCode == selectionToggleKeyCode) {
+		selectionKeyPressed = false;
+		copyTabsToClipboard();
 	}
 }
 
 function onKeyDown(event) {
-	if (event.keyCode == shiftKeyCode) {
-		shiftPressed = true;
+	if (event.keyCode == selectionToggleKeyCode) {
+		selectionKeyPressed = true;
 	}
 }
 
-var windows = require("sdk/windows").browserWindows;
 for (let window of windows) {
 	attachKeyListeners(window);
 }
@@ -78,3 +95,19 @@ function attachKeyListeners(window) {
 	windowView.addEventListener("keyup", onKeyUp, true);
 	windowView.addEventListener("keydown", onKeyDown, true);
 }
+
+function copyAllTabs() {
+	for (let tab of tabs) {
+		processTab(tab);
+	}
+	copyTabsToClipboard();
+}
+
+var copyAllTabsHotkey = Hotkey({
+  combo: copyAllTabsHotkeyCombo,
+  onPress: function() {
+	  copyAllTabs();
+  }
+});
+
+exports.copyAllTabs = copyAllTabs;
