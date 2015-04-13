@@ -107,5 +107,3 @@ var copyAllTabsHotkey = Hotkey({
 	  copyAllTabs();
   }
 });
-
-exports.copyAllTabs = copyAllTabs;
