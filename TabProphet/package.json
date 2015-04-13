@@ -2,8 +2,54 @@
   "name": "tab_prophet",
   "title": "Tab Prophet",
   "id": "***REMOVED***",
-  "description": "Multiple tab selection to copy multiple URLs to clipboard at once. Press shift and click on the tab you want to select.",
+  "description": "Copying multiple URLs to clipboard at once.",
   "author": "Vladislav Zolotaryov",
   "license": "MPL 2.0",
-  "version": "0.2"
+  "version": "0.3",
+  "preferences": [
+	{
+      "name": "selectedTabColor",
+      "title": "Selected tab color",
+	  "description" : "Any color you want",
+      "type": "color",
+      "value": "#3366FF"
+    }, 
+	{
+      "name": "startingClipboardDecorator",
+      "title": "Staring characters of your clipboard value",
+	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
+      "type": "string",
+      "value": ""
+    },
+	{
+      "name": "urlsDelimiter",
+      "title": "Delimiter between urls",
+	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
+      "type": "string",
+      "value": "\n"
+    },
+	{
+      "name": "endingClipboardDecorator",
+      "title": "Ending characters of your clipboard value",
+	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
+      "type": "string",
+      "value": ""
+    },
+	{
+      "name": "selectionToggleKeyCode",
+      "title": "Toggle selection key",
+	  "description" : "CTRL is not included, because it will affect your CTRL+C, CTRL+V abilities",
+      "type": "menulist",
+      "value": 16,
+      "options": [
+          {
+              "value": "16",
+              "label": "Shift"
+          },
+          {
+              "value": "18",
+              "label": "Alt"
+          }
+        ]
+    }]
 }
