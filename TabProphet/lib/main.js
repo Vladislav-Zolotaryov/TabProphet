@@ -140,8 +140,8 @@ windows.on('open', function(window) {
 
 function attachKeyListeners(window) {
 	var windowView = viewFor(window);
-	windowView.addEventListener("keyup", onKeyUp, true);
-	windowView.addEventListener("keydown", onKeyDown, true);
+	windowView.addEventListener("keyup", onKeyUp);
+	windowView.addEventListener("keydown", onKeyDown);
 }
 
 function copyAllTabs() {
