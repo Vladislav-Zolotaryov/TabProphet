@@ -12,7 +12,7 @@ var selectionToggleKeyCode = 16;
 var urlsDelimiter = '\n';
 var copyAllTabsHotkeyCombo = "control-alt-a";
 
-function regsiterOnTabClickEvent(tab) {
+function addOnTabClickEvent(tab) {
   var clickClojure = function(tab) { 
 	return function() {
 		onTabClick(tab);
@@ -22,10 +22,21 @@ function regsiterOnTabClickEvent(tab) {
   tabView.addEventListener("click", clickClojure(tab));
 }
 
-for (let tab of tabs) {
-	regsiterOnTabClickEvent(tab);
+function removeOnTabClickEvent(tab) {
+  var clickClojure = function(tab) { 
+	return function() {
+		onTabClick(tab);
+	}
+  }
+  var tabView = viewFor(tab);
+  tabView.removeEventListener("click", clickClojure(tab));
 }
-tabs.on("open", regsiterOnTabClickEvent);
+
+for (let tab of tabs) {
+	addOnTabClickEvent(tab);
+}
+tabs.on("open", addOnTabClickEvent);
+tabs.on("close", removeOnTabClickEvent);
 
 function onTabClick(tab) {
 	if (selectionKeyPressed) {
@@ -88,10 +99,20 @@ windows.on('open', function(window) {
 	attachKeyListeners(window);
 });
 
+windows.on('close', function(window) {
+	removeKeyListeners(window);
+});
+
 function attachKeyListeners(window) {
 	var windowView = viewFor(window);
 	windowView.addEventListener("keyup", onKeyUp);
 	windowView.addEventListener("keydown", onKeyDown);
+}
+
+function removeKeyListeners(window) {
+	var windowView = viewFor(window);
+	windowView.removeEventListener("keyup", onKeyUp);
+	windowView.removeEventListener("keydown", onKeyDown);
 }
 
 function copyAllTabs() {
