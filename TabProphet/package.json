@@ -1,7 +1,7 @@
 {
   "name": "tab_prophet",
   "title": "Tab Prophet",
-  "id": "***REMOVED***",
+  "id": "test_id",
   "description": "Copying multiple URLs to clipboard at once.",
   "author": "Vladislav Zolotaryov",
   "license": "MPL 2.0",
