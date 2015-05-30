@@ -1,108 +1,39 @@
 var { viewFor } = require("sdk/view/core");
-var { Hotkey } = require("sdk/hotkeys");
 var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
-var simplePrefs = require("sdk/simple-prefs");
-var preferences = simplePrefs.prefs;
 
-var windows = require("sdk/windows").browserWindows;
-var selectedTabs = [];
-var selectionKeyPressed = false;
+var hotkeys = require("hotkeys.js").hotkeys;
+var tabListener = require("hotkeys.js").tabListener;
+var myPreferences = require("preferences.js").preferences;
 
-var shiftKeyCode = '16';
-
-var copyAllTabsHotkeyStatusTag = 'copyAllTabsHotkeyStatus';
-var copyAllTabsHotkeyStatus = true;
-if (preferences[copyAllTabsHotkeyStatusTag]) {
-	copyAllTabsHotkeyStatus = preferences[copyAllTabsHotkeyStatusTag];
-}
-simplePrefs.on(copyAllTabsHotkeyStatusTag, function(name) { 
-	copyAllTabsHotkeyStatus = preferences[name];
-	recreateCopyAllTabsHotkey();
+myPreferences.setSelectionToggleKeyCodeChangeCallback(function(value) {
+	tabListener.setSelectionToggleKey(value);
 });
 
-var urlsDelimiterTag = 'urlsDelimiter';
-var urlsDelimiter = '\n';
-if (preferences[urlsDelimiterTag]) {
-	urlsDelimiter = unescapeSpecial(preferences[urlsDelimiterTag]);
-}
-simplePrefs.on(urlsDelimiterTag, function(name) { 
-	urlsDelimiter = unescapeSpecial(preferences[name]); 
+myPreferences.setCopyAllTabsHotkeyChangeCallback(function(value) {
+	if (myPreferences.getCopyAllTabsHokeyStatus()) {
+		hotkeys.startCopyAllTabsHotkey(value);
+	}
 });
 
-var startingClipboardDecoratorTag = 'startingClipboardDecorator';
-var startingClipboardDecorator = '';
-if (preferences[startingClipboardDecoratorTag]) {
-	startingClipboardDecorator = unescapeSpecial(preferences[startingClipboardDecoratorTag]);
-}
-simplePrefs.on(startingClipboardDecoratorTag, function(name) { 
-	startingClipboardDecorator = unescapeSpecial(preferences[name]); 
+myPreferences.setCopyAllTabsStatusChangeCallback(function(value) {
+	if (value) {
+		hotkeys.startCopyAllTabsHotkey(myPreferences.getCopyAllTabsHotkey());
+	} else {
+		hotkeys.stopCopyAllTabsHotkey();
+	}
 });
 
-var endingClipboardDecoratorTag = 'endingClipboardDecorator';
-var endingClipboardDecorator = '';
-if (preferences[endingClipboardDecoratorTag]) {
-	endingClipboardDecorator = unescapeSpecial(preferences[endingClipboardDecoratorTag]);
-}
-simplePrefs.on(endingClipboardDecoratorTag, function(name) { 
-	endingClipboardDecorator = unescapeSpecial(preferences[name]); 
-});
+hotkeys.startCopyAllTabsHotkey(myPreferences.getCopyAllTabsHotkey());
+hotkeys.onCopyAllTabs = copyAllTabs;
 
+tabListener.onTabSelection = copyTabsToClipboard;
 
-var selectedTabColorTag = 'selectedTabColor';
-var selectedTabColor = '#3366FF';
-if (preferences[selectedTabColorTag]) {
-	selectedTabColor = preferences[selectedTabColorTag];
-}
-simplePrefs.on(selectedTabColorTag, function(name) { 
-	selectedTabColor = preferences[name]; 
-});
-
-var selectionToggleKeyCodeTag = 'selectionToggleKeyCode';
-var selectionToggleKeyCode = shiftKeyCode;
-if (preferences[selectionToggleKeyCodeTag]) {
-	selectionToggleKeyCode = preferences[selectionToggleKeyCodeTag];
-}
-simplePrefs.on(selectionToggleKeyCodeTag, function(name) {
-	selectionToggleKeyCode = preferences[name]; 
-});
-
-
-var copyAllTabsCharacterTag = 'copyAllTabsCharacter';
-var copyAllTabsCharacter = 'a';
-
-if (preferences[copyAllTabsCharacterTag]) {
-	copyAllTabsCharacter = preferences[copyAllTabsCharacterTag];
-}
-simplePrefs.on(copyAllTabsCharacterTag, function(name) {
-	copyAllTabsCharacter = preferences[name];
-	recreateCopyAllTabsHotkey();
-});
-
-
-var copyAllTabsModifierTag = 'copyAllTabsModifier';
-var copyAllTabsModifier = 'shift-alt';
-
-if (preferences[copyAllTabsModifierTag]) {
-	copyAllTabsModifier = preferences[copyAllTabsModifierTag];
-}
-simplePrefs.on(copyAllTabsModifierTag, function(name) {
-	copyAllTabsModifier = preferences[name];
-	recreateCopyAllTabsHotkey();
-});
-
-var copyAllTabsHotkey = createCopyAllTabsHotkey(formatCopyAllTabsHotkey());
-
-function formatCopyAllTabsHotkey() {
-	return copyAllTabsModifier + '-' + copyAllTabsCharacter;
-}
-
-
-function unescapeSpecial(string) {
-	string = string.replace('\\n', '\n');
-	string = string.replace('\\r', '\r');
-	string = string.replace('\\t', '\t');
-	return string;
+function copyAllTabs() {
+	for (let tab of tabs) {
+		processTab(tab);
+	}
+	copyTabsToClipboard();
 }
 
 function addOnTabClickEvent(tab) {
@@ -128,14 +59,17 @@ function removeOnTabClickEvent(tab) {
 for (let tab of tabs) {
 	addOnTabClickEvent(tab);
 }
+
 tabs.on("open", addOnTabClickEvent);
 tabs.on("close", removeOnTabClickEvent);
 
 function onTabClick(tab) {
-	if (selectionKeyPressed) {
+	if (tabListener.isSelectionKeyPressed()) {
 		processTab(tab);
 	}
 }
+
+var selectedTabs = [];
 
 function processTab(tab) {
 	var tabView = viewFor(tab);
@@ -146,7 +80,7 @@ function processTab(tab) {
 	} else {
 		selectedTabs.push(tab);
 		tabView.style.previousColor = tabView.style.color;
-		tabView.style.color = selectedTabColor;
+		tabView.style.color = myPreferences.getSelectedTabColor();
 	}
 }
 
@@ -167,10 +101,10 @@ function flushToClipboard() {
 		urls.push(selectedTabs[i].url);
 	}
 	var cliptext = '';
-	cliptext = urls.join(urlsDelimiter);
+	cliptext = urls.join(myPreferences.getUrlsDelimiter());
 	if (urls.length > 1) {
-		cliptext = startingClipboardDecorator + cliptext;
-		cliptext += endingClipboardDecorator;
+		cliptext = myPreferences.getStartingClipboardDecorator() + cliptext;
+		cliptext += myPreferences.getEndingClipboardDecorator();
 	}
 	clipboard.set(cliptext);
 }
@@ -178,67 +112,4 @@ function flushToClipboard() {
 function copyTabsToClipboard() {
 	flushToClipboard();
 	clearAllSelection();
-}
-
-function onKeyUp(event) {
-	if (event.keyCode == selectionToggleKeyCode) {
-		selectionKeyPressed = false;
-		copyTabsToClipboard();
-	}
-}
-
-function onKeyDown(event) {
-	if (event.keyCode == selectionToggleKeyCode) {
-		selectionKeyPressed = true;
-	}
-}
-
-for (let window of windows) {
-	attachKeyListeners(window);
-}
-
-windows.on('open', function(window) {
-	attachKeyListeners(window);
-});
-
-windows.on('close', function(window) {
-	removeKeyListeners(window);
-});
-
-function attachKeyListeners(window) {
-	var windowView = viewFor(window);
-	windowView.addEventListener("keyup", onKeyUp);
-	windowView.addEventListener("keydown", onKeyDown);
-}
-
-function removeKeyListeners(window) {
-	var windowView = viewFor(window);
-	windowView.removeEventListener("keyup", onKeyUp);
-	windowView.removeEventListener("keydown", onKeyDown);
-}
-
-function copyAllTabs() {
-	for (let tab of tabs) {
-		processTab(tab);
-	}
-	copyTabsToClipboard();
-}
-
-function recreateCopyAllTabsHotkey() {
-	if (copyAllTabsHotkey !== undefined) {
-		copyAllTabsHotkey.destroy();
-	}
-	copyAllTabsHotkey = createCopyAllTabsHotkey(formatCopyAllTabsHotkey());
-}
-
-function createCopyAllTabsHotkey(copyHotkey) {
-	if (!copyAllTabsHotkeyStatus) {
-		return undefined;
-	}
-    return Hotkey({
-		combo: copyHotkey,
-		onPress: function() {
-			copyAllTabs();
-		}
-	});
 }
