@@ -1,53 +1,102 @@
-var preferences = require("sdk/simple-prefs").prefs;
 var { viewFor } = require("sdk/view/core");
 var { Hotkey } = require("sdk/hotkeys");
 var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
+var simplePrefs = require("sdk/simple-prefs");
+var preferences = simplePrefs.prefs;
 
 var windows = require("sdk/windows").browserWindows;
 var selectedTabs = [];
 var selectionKeyPressed = false;
 
-var copyAllTabsHotkeyCombo = "control-alt-a";
-var urlsDelimiter = '\n';
-if (preferences['urlsDelimiter']) {
-	urlsDelimiter = unescapeSpecial(preferences['urlsDelimiter']);
+var shiftKeyCode = '16';
+
+var copyAllTabsHotkeyStatusTag = 'copyAllTabsHotkeyStatus';
+var copyAllTabsHotkeyStatus = true;
+if (preferences[copyAllTabsHotkeyStatusTag]) {
+	copyAllTabsHotkeyStatus = preferences[copyAllTabsHotkeyStatusTag];
 }
-require("sdk/simple-prefs").on('urlsDelimiter', function(name) { 
+simplePrefs.on(copyAllTabsHotkeyStatusTag, function(name) { 
+	copyAllTabsHotkeyStatus = preferences[name];
+	recreateCopyAllTabsHotkey();
+});
+
+var urlsDelimiterTag = 'urlsDelimiter';
+var urlsDelimiter = '\n';
+if (preferences[urlsDelimiterTag]) {
+	urlsDelimiter = unescapeSpecial(preferences[urlsDelimiterTag]);
+}
+simplePrefs.on(urlsDelimiterTag, function(name) { 
 	urlsDelimiter = unescapeSpecial(preferences[name]); 
 });
 
+var startingClipboardDecoratorTag = 'startingClipboardDecorator';
 var startingClipboardDecorator = '';
-if (preferences['startingClipboardDecorator']) {
-	startingClipboardDecorator = unescapeSpecial(preferences['startingClipboardDecorator']);
+if (preferences[startingClipboardDecoratorTag]) {
+	startingClipboardDecorator = unescapeSpecial(preferences[startingClipboardDecoratorTag]);
 }
-require("sdk/simple-prefs").on('startingClipboardDecorator', function(name) { 
+simplePrefs.on(startingClipboardDecoratorTag, function(name) { 
 	startingClipboardDecorator = unescapeSpecial(preferences[name]); 
 });
 
+var endingClipboardDecoratorTag = 'endingClipboardDecorator';
 var endingClipboardDecorator = '';
-if (preferences['endingClipboardDecorator']) {
-	endingClipboardDecorator = unescapeSpecial(preferences['endingClipboardDecorator']);
+if (preferences[endingClipboardDecoratorTag]) {
+	endingClipboardDecorator = unescapeSpecial(preferences[endingClipboardDecoratorTag]);
 }
-require("sdk/simple-prefs").on('endingClipboardDecorator', function(name) { 
+simplePrefs.on(endingClipboardDecoratorTag, function(name) { 
 	endingClipboardDecorator = unescapeSpecial(preferences[name]); 
 });
 
+
+var selectedTabColorTag = 'selectedTabColor';
 var selectedTabColor = '#3366FF';
-if (preferences['selectedTabColor']) {
-	selectedTabColor = preferences['selectedTabColor'];
+if (preferences[selectedTabColorTag]) {
+	selectedTabColor = preferences[selectedTabColorTag];
 }
-require("sdk/simple-prefs").on('selectedTabColor', function(name) { 
+simplePrefs.on(selectedTabColorTag, function(name) { 
 	selectedTabColor = preferences[name]; 
 });
 
-var selectionToggleKeyCode = '16';
-if (preferences['selectionToggleKeyCode']) {
-	selectionToggleKeyCode = preferences['selectionToggleKeyCode'];
+var selectionToggleKeyCodeTag = 'selectionToggleKeyCode';
+var selectionToggleKeyCode = shiftKeyCode;
+if (preferences[selectionToggleKeyCodeTag]) {
+	selectionToggleKeyCode = preferences[selectionToggleKeyCodeTag];
 }
-require("sdk/simple-prefs").on('selectionToggleKeyCode', function(name) {
+simplePrefs.on(selectionToggleKeyCodeTag, function(name) {
 	selectionToggleKeyCode = preferences[name]; 
 });
+
+
+var copyAllTabsCharacterTag = 'copyAllTabsCharacter';
+var copyAllTabsCharacter = 'a';
+
+if (preferences[copyAllTabsCharacterTag]) {
+	copyAllTabsCharacter = preferences[copyAllTabsCharacterTag];
+}
+simplePrefs.on(copyAllTabsCharacterTag, function(name) {
+	copyAllTabsCharacter = preferences[name];
+	recreateCopyAllTabsHotkey();
+});
+
+
+var copyAllTabsModifierTag = 'copyAllTabsModifier';
+var copyAllTabsModifier = 'shift-alt';
+
+if (preferences[copyAllTabsModifierTag]) {
+	copyAllTabsModifier = preferences[copyAllTabsModifierTag];
+}
+simplePrefs.on(copyAllTabsModifierTag, function(name) {
+	copyAllTabsModifier = preferences[name];
+	recreateCopyAllTabsHotkey();
+});
+
+var copyAllTabsHotkey = createCopyAllTabsHotkey(formatCopyAllTabsHotkey());
+
+function formatCopyAllTabsHotkey() {
+	return copyAllTabsModifier + '-' + copyAllTabsCharacter;
+}
+
 
 function unescapeSpecial(string) {
 	string = string.replace('\\n', '\n');
@@ -110,13 +159,16 @@ function clearAllSelection() {
 }
 
 function flushToClipboard() {
+	if (selectedTabs.length == 0) {
+		return;
+	}
 	var urls = [];
 	for (i = 0; i < selectedTabs.length; i++) {
 		urls.push(selectedTabs[i].url);
 	}
 	var cliptext = '';
 	cliptext = urls.join(urlsDelimiter);
-	if (urls.length > 0) {
+	if (urls.length > 1) {
 		cliptext = startingClipboardDecorator + cliptext;
 		cliptext += endingClipboardDecorator;
 	}
@@ -172,9 +224,21 @@ function copyAllTabs() {
 	copyTabsToClipboard();
 }
 
-var copyAllTabsHotkey = Hotkey({
-  combo: copyAllTabsHotkeyCombo,
-  onPress: function() {
-	  copyAllTabs();
-  }
-});
+function recreateCopyAllTabsHotkey() {
+	if (copyAllTabsHotkey !== undefined) {
+		copyAllTabsHotkey.destroy();
+	}
+	copyAllTabsHotkey = createCopyAllTabsHotkey(formatCopyAllTabsHotkey());
+}
+
+function createCopyAllTabsHotkey(copyHotkey) {
+	if (!copyAllTabsHotkeyStatus) {
+		return undefined;
+	}
+    return Hotkey({
+		combo: copyHotkey,
+		onPress: function() {
+			copyAllTabs();
+		}
+	});
+}
