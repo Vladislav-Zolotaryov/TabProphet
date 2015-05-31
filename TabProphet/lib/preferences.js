@@ -10,9 +10,9 @@ var Preferences = function() {
 		return string;
 	}
 
-	var FieldPreference = function(defaultValue, tag, valueProcessor) {
+	var FieldPreference = function(defaultValue, tag, processor) {
 		var preference = defaultValue;
-		
+		var valueProcessor = processor;
 		var prefChangeCallBack = function(value) {};
 		
 		if (prefs[tag]) {
@@ -76,28 +76,30 @@ var Preferences = function() {
 		selectionToggleKeyCodePreference.setPreferenceChangeCallback(callback);
 	};
 
+	var formatCopyAllTabsHotkey = function() {
+		return copyAllTabsModifierPreference.getPreference() + '-' + copyAllTabsCharacterPreference.getPreference();
+	};
+	
+	this.getCopyAllTabsHotkey = formatCopyAllTabsHotkey;
+	
 	var onCopyAllTabsHotkeyChange = function() {};
 	
 	this.setCopyAllTabsHotkeyChangeCallback = function(callback) {
 		onCopyAllTabsHotkeyChange = callback;
-	}
+	};
 	
 	var copyAllTabsHotkeyChangeListener = function() {
 		onCopyAllTabsHotkeyChange(formatCopyAllTabsHotkey());
 	};
-	
-	this.getCopyAllTabsHotkey = function() {
-		return copyAllTabsModifierPreference.getPreference() + '-' + copyAllTabsCharacterPreference.getPreference();
-	};
-	
+		
 	var copyAllTabsCharacterTag = 'copyAllTabsCharacter';
 	var copyAllTabsCharacterPreference = new FieldPreference('a', copyAllTabsCharacterTag);
 	
 	var copyAllTabsModifierTag = 'copyAllTabsModifier';
 	var copyAllTabsModifierPreference = new FieldPreference('shift-alt', copyAllTabsModifierTag);
 
-	copyAllTabsCharacterPreference.setPreferenceChangeCallback(onCopyAllTabsHotkeyChange);
-	copyAllTabsModifierPreference.setPreferenceChangeCallback(onCopyAllTabsHotkeyChange);
+	copyAllTabsCharacterPreference.setPreferenceChangeCallback(copyAllTabsHotkeyChangeListener);
+	copyAllTabsModifierPreference.setPreferenceChangeCallback(copyAllTabsHotkeyChangeListener);
 	
 	var copyAllTabsHotkeyStatusTag = 'copyAllTabsHotkeyStatus';
 	var copyAllTabsHotkeyStatusPreference = new FieldPreference(true, copyAllTabsHotkeyStatusTag);
