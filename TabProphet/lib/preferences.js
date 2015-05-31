@@ -12,6 +12,7 @@ var Preferences = function() {
 
 	var FieldPreference = function(defaultValue, tag, valueProcessor) {
 		var preference = defaultValue;
+		
 		var prefChangeCallBack = function(value) {};
 		
 		if (prefs[tag]) {
@@ -21,7 +22,7 @@ var Preferences = function() {
 			}
 		}
 		
-		simplePrefs.on(tag, function(name) { 
+		simplePrefs.on(tag, function(name) {
 			preference = prefs[name]; 
 			if (valueProcessor) {
 				preference = valueProcessor(preference);
@@ -66,17 +67,13 @@ var Preferences = function() {
 	this.getSelectedTabColor = function() {
 		return selectedTabColorPreference.getPreference();
 	};
-	
+
 	var selectionToggleKeyCodeTag = 'selectionToggleKeyCode';
 	var shiftKeyCode = '16';
 	var selectionToggleKeyCodePreference = new FieldPreference(shiftKeyCode, selectionToggleKeyCodeTag);
 	
 	this.setSelectionToggleKeyCodeChangeCallback = function(callback) {
 		selectionToggleKeyCodePreference.setPreferenceChangeCallback(callback);
-	};
-	
-	this.getSelectedTabColor = function() {
-		return selectedTabColorPreference.getPreference();
 	};
 
 	var onCopyAllTabsHotkeyChange = function() {};

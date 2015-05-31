@@ -26,7 +26,7 @@
       "title": "Delimiter between urls",
 	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
       "type": "string",
-      "value": "\n"
+      "value": "\\n"
     },
 	{
       "name": "endingClipboardDecorator",
@@ -40,7 +40,7 @@
       "title": "Toggle selection key modifier",
 	  "description" : "Select the toggle modifier that allows you to select tabs that are going to be copied",
       "type": "menulist",
-      "value": "16",
+      "value": 16,
       "options": [
           {
               "value": "16",
@@ -68,7 +68,7 @@
       "title": "Copy all tabs hotkey modifiers",
 	  "description" : "Key combination that represents the first part of your 'Copy All Tabs' combination",
       "type": "menulist",
-      "value": "accel-alt",
+      "value": "shift-alt",
       "options": [
           {
 			"value": "accel-shift",
@@ -197,5 +197,5 @@
 		  }
 	  ]
     }
-	]
+  ]
 }

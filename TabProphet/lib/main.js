@@ -2,9 +2,9 @@ var { viewFor } = require("sdk/view/core");
 var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
 
-var hotkeys = require("hotkeys.js").hotkeys;
-var tabListener = require("hotkeys.js").tabListener;
-var myPreferences = require("preferences.js").preferences;
+var hotkeys = require("hotkeys").hotkeys;
+var tabListener = require("hotkeys").tabListener;
+var myPreferences = require("preferences").preferences;
 
 myPreferences.setSelectionToggleKeyCodeChangeCallback(function(value) {
 	tabListener.setSelectionToggleKey(value);
