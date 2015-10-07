@@ -31,7 +31,7 @@ var Hotkeys = function() {
 		}
 		copyAllTabsHotkey = undefined;
 	};
-}
+};
 
 var TabListener = function() {
 	var self = this;
@@ -54,7 +54,7 @@ var TabListener = function() {
 			selectionKeyPressed = false;
 			self.onTabSelection();
 		}
-	}
+	};
 
 	var onKeyDown = function(event) {
 		if (event.keyCode == selectionToggleKeyCode) {
@@ -85,10 +85,7 @@ var TabListener = function() {
 	for (let window of windows) {
 		attachKeyListeners(window);
 	}
-}
+};
 
-
-var hotkeys = new Hotkeys();
-var tabListener = new TabListener();
-exports.hotkeys = hotkeys;
-exports.tabListener = tabListener;
+exports.hotkeys = new Hotkeys();
+exports.tabListener = new TabListener();

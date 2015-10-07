@@ -1,11 +1,11 @@
 {
   "name": "tab_prophet",
   "title": "Tab Prophet",
-  "id": "test_id",
+  "id": "test_code",
   "description": "Copying multiple URLs to clipboard at once.",
   "author": "Vladislav Zolotaryov",
   "license": "MPL 2.0",
-  "version": "0.3",
+  "version": "1.0.4",
   "preferences": [
 	{
       "name": "selectedTabColor",
@@ -16,17 +16,23 @@
     }, 
 	{
       "name": "startingClipboardDecorator",
-      "title": "Staring characters of your clipboard value",
+      "title": "Starting characters of your clipboard value",
 	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
       "type": "string",
       "value": ""
     },
 	{
-      "name": "urlsDelimiter",
-      "title": "Delimiter between urls",
+      "name": "itemsDelimiter",
+      "title": "Delimiter between items",
 	  "description" : "Any string value including escapes for special characters such as:'\\n', '\\r', '\\t'",
       "type": "string",
       "value": "\\n"
+    },	{
+      "name": "copyItemFormat",
+      "title": "Format of copied item",
+	  "description" : "Any string value including tags: ${index}, ${url}, ${title}",
+      "type": "string",
+      "value": "${url}"
     },
 	{
       "name": "endingClipboardDecorator",
@@ -38,7 +44,7 @@
 	{
       "name": "selectionToggleKeyCode",
       "title": "Toggle selection key modifier",
-	  "description" : "Select the toggle modifier that allows you to select tabs that are going to be copied",
+	  "description" : "Choose the toggle modifier that allows you to select tabs to be copied",
       "type": "menulist",
       "value": 16,
       "options": [

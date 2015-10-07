@@ -2,9 +2,9 @@ var { viewFor } = require("sdk/view/core");
 var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
 
-var hotkeys = require("hotkeys").hotkeys;
-var tabListener = require("hotkeys").tabListener;
-var myPreferences = require("preferences").preferences;
+var hotkeys = require("./lib/hotkeys").hotkeys;
+var tabListener = require("./lib/hotkeys").tabListener;
+var myPreferences = require("./lib/preferences").preferences;
 
 myPreferences.setSelectionToggleKeyCodeChangeCallback(function(value) {
 	tabListener.setSelectionToggleKey(value);
@@ -40,8 +40,8 @@ function addOnTabClickEvent(tab) {
   var clickClojure = function(tab) { 
 	return function() {
 		onTabClick(tab);
-	}
-  }
+	};
+  };
   var tabView = viewFor(tab);
   tabView.addEventListener("click", clickClojure(tab));
 }
@@ -50,8 +50,8 @@ function removeOnTabClickEvent(tab) {
   var clickClojure = function(tab) { 
 	return function() {
 		onTabClick(tab);
-	}
-  }
+	};
+  };
   var tabView = viewFor(tab);
   tabView.removeEventListener("click", clickClojure(tab));
 }
@@ -92,21 +92,34 @@ function clearAllSelection() {
 	selectedTabs = [];
 }
 
+function formatCopyItem(tabItem) {
+	var result = myPreferences.getCopyItemFormat();
+	result = result.replace(myPreferences.CopyItemFormatSpecialTags.INDEX, tabItem.index);
+	result = result.replace(myPreferences.CopyItemFormatSpecialTags.URL, tabItem.url);
+	result = result.replace(myPreferences.CopyItemFormatSpecialTags.TITLE, tabItem.title);
+	return result;
+}
+
 function flushToClipboard() {
-	if (selectedTabs.length == 0) {
+	if (selectedTabs.length === 0) {
 		return;
 	}
 	var urls = [];
 	for (i = 0; i < selectedTabs.length; i++) {
-		urls.push(selectedTabs[i].url);
+		urls.push(formatCopyItem(selectedTabs[i]));
 	}
-	var cliptext = '';
-	cliptext = urls.join(myPreferences.getUrlsDelimiter());
-	if (urls.length > 1) {
-		cliptext = myPreferences.getStartingClipboardDecorator() + cliptext;
+	var joinedItems = urls.join(myPreferences.getItemsDelimiter());
+	var cliptext;
+	if (urls.length == 1) {
+		cliptext = joinedItems;
+	} else if (urls.length > 1) {
+		cliptext = myPreferences.getStartingClipboardDecorator();
+	        cliptext += joinedItems;
 		cliptext += myPreferences.getEndingClipboardDecorator();
 	}
-	clipboard.set(cliptext);
+	if (cliptext) {
+		clipboard.set(cliptext);
+	}
 }
 
 function copyTabsToClipboard() {

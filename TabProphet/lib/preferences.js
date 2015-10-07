@@ -8,7 +8,7 @@ var Preferences = function() {
 		string = string.replace('\\r', '\r');
 		string = string.replace('\\t', '\t');
 		return string;
-	}
+	};
 
 	var FieldPreference = function(defaultValue, tag, processor) {
 		var preference = defaultValue;
@@ -32,18 +32,18 @@ var Preferences = function() {
 		
 		this.getPreference = function() {
 			return preference;
-		}
+		};
 		
 		this.setPreferenceChangeCallback = function(callback) {
 			prefChangeCallBack = callback;
-		}
-	}
+		};
+	};
 	
-	var urlsDelimiterTag = 'urlsDelimiter';
-	var urlsDelimiterPreference = new FieldPreference('\n', urlsDelimiterTag, unescapeSpecial);
+	var itemsDelimiterTag = 'itemsDelimiter';
+	var itemsDelimiterPreference = new FieldPreference('\n', itemsDelimiterTag, unescapeSpecial);
 
-	this.getUrlsDelimiter = function() {
-		return urlsDelimiterPreference.getPreference();
+	this.getItemsDelimiter = function() {
+		return itemsDelimiterPreference.getPreference();
 	};
 	
 	var startingClipboardDecoratorTag = 'startingClipboardDecorator';
@@ -106,13 +106,27 @@ var Preferences = function() {
 	
 	this.setCopyAllTabsStatusChangeCallback = function(callback) {
 		copyAllTabsHotkeyStatusPreference.setPreferenceChangeCallback(callback);
-	}
+	};
 	
 	this.getCopyAllTabsHokeyStatus = function() {
 		return copyAllTabsHotkeyStatusPreference.getPreference();
-	}
+	};
+
+	var copyItemFormatTag = 'copyItemFormat';
 	
-}
+	this.CopyItemFormatSpecialTags = {
+		URL : '${url}',
+		INDEX : '${index}',
+		TITLE : '${title}'
+	};
+
+	var copyItemFormatPreference = new FieldPreference(this.CopyItemFormatSpecialTags.URL, copyItemFormatTag);
+
+	this.getCopyItemFormat = function () {
+		return copyItemFormatPreference.getPreference();
+	};
+
+};
 
 var preferences = new Preferences();
 exports.preferences = preferences;
