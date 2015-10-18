@@ -1,7 +1,7 @@
 {
   "name": "tab_prophet",
   "title": "Tab Prophet",
-  "id": "test_code",
+  "id": "test_id",
   "description": "Copying multiple URLs to clipboard at once.",
   "author": "Vladislav Zolotaryov",
   "license": "MPL 2.0",
@@ -13,7 +13,7 @@
 	  "description" : "Any color you want",
       "type": "color",
       "value": "#3366FF"
-    }, 
+    },
 	{
       "name": "startingClipboardDecorator",
       "title": "Starting characters of your clipboard value",

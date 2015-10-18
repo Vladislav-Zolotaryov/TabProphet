@@ -1,102 +1,43 @@
 var { viewFor } = require("sdk/view/core");
-var tabs = require("sdk/tabs");
 var clipboard = require("sdk/clipboard");
 
-var hotkeys = require("./lib/hotkeys").hotkeys;
-var tabListener = require("./lib/hotkeys").tabListener;
-var myPreferences = require("./lib/preferences").preferences;
+var appPreferences = require("./lib/preferences").preferences;
+var Hotkeys = require("./lib/hotkeys").Hotkeys;
 
-myPreferences.setSelectionToggleKeyCodeChangeCallback(function(value) {
-	tabListener.setSelectionToggleKey(value);
+var TabListener = require("./lib/hotkeys").TabListener;
+var WindowKeyPressListener = require("./lib/hotkeys").WindowKeyPressListener;
+
+/*appPreferences.setSelectionToggleKeyCodeChangeCallback(function(value) {
+	tabCopyListener.setSelectionToggleKey(value);
 });
 
-myPreferences.setCopyAllTabsHotkeyChangeCallback(function(value) {
-	if (myPreferences.getCopyAllTabsHokeyStatus()) {
+appPreferences.setCopyAllTabsHotkeyChangeCallback(function(value) {
+	if (appPreferences.getCopyAllTabsHokeyStatus()) {
 		hotkeys.startCopyAllTabsHotkey(value);
 	}
 });
 
-myPreferences.setCopyAllTabsStatusChangeCallback(function(value) {
+appPreferences.setCopyAllTabsStatusChangeCallback(function(value) {
 	if (value) {
-		hotkeys.startCopyAllTabsHotkey(myPreferences.getCopyAllTabsHotkey());
+		hotkeys.startCopyAllTabsHotkey(appPreferences.getCopyAllTabsHotkey());
 	} else {
 		hotkeys.stopCopyAllTabsHotkey();
 	}
 });
 
-hotkeys.startCopyAllTabsHotkey(myPreferences.getCopyAllTabsHotkey());
+hotkeys.startCopyAllTabsHotkey(appPreferences.getCopyAllTabsHotkey());
 hotkeys.onCopyAllTabs = copyAllTabs;
+tabCopyListener.onTabSelection = copyTabsToClipboard;
+*/
 
-tabListener.onTabSelection = copyTabsToClipboard;
-
-function copyAllTabs() {
-	for (let tab of tabs) {
-		processTab(tab);
-	}
-	copyTabsToClipboard();
-}
-
-function addOnTabClickEvent(tab) {
-  var clickClojure = function(tab) { 
-	return function() {
-		onTabClick(tab);
-	};
-  };
-  var tabView = viewFor(tab);
-  tabView.addEventListener("click", clickClojure(tab));
-}
-
-function removeOnTabClickEvent(tab) {
-  var clickClojure = function(tab) { 
-	return function() {
-		onTabClick(tab);
-	};
-  };
-  var tabView = viewFor(tab);
-  tabView.removeEventListener("click", clickClojure(tab));
-}
-
-for (let tab of tabs) {
-	addOnTabClickEvent(tab);
-}
-
-tabs.on("open", addOnTabClickEvent);
-tabs.on("close", removeOnTabClickEvent);
-
-function onTabClick(tab) {
-	if (tabListener.isSelectionKeyPressed()) {
-		processTab(tab);
-	}
-}
-
-var selectedTabs = [];
-
-function processTab(tab) {
-	var tabView = viewFor(tab);
-	var index = selectedTabs.indexOf(tab);
-	if (index > -1) {
-		selectedTabs.splice(index, 1);
-		tabView.style.color = tabView.style.previousColor;
-	} else {
-		selectedTabs.push(tab);
-		tabView.style.previousColor = tabView.style.color;
-		tabView.style.color = myPreferences.getSelectedTabColor();
-	}
-}
-
-function clearAllSelection() {
-	for (var i = 0 ; i < selectedTabs.length ; i++) {
-		var tabView = viewFor(selectedTabs[i]);
-		tabView.style.color = tabView.style.previousColor;
-	}
-	selectedTabs = [];
-}
+copyKeyWindowListener = new WindowKeyPressListener(appPreferences.getSelectionToggleKeyCode());
+copyKeyTabListener = new TabListener(copyKeyWindowListener, flushToClipboard);
 
 function formatCopyItem(tabItem) {
-	var result = myPreferences.getCopyItemFormat();
-	result = result.replace(myPreferences.CopyItemFormatSpecialTags.INDEX, tabItem.index);
-	result = result.replace(myPreferences.CopyItemFormatSpecialTags.URL, tabItem.url);
-	result = result.replace(myPreferences.CopyItemFormatSpecialTags.TITLE, tabItem.title);
+	var result = appPreferences.getCopyItemFormat();
+	result = result.replace(appPreferences.CopyItemFormatSpecialTags.INDEX, tabItem.index);
+	result = result.replace(appPreferences.CopyItemFormatSpecialTags.URL, tabItem.url);
+	result = result.replace(appPreferences.CopyItemFormatSpecialTags.TITLE, tabItem.title);
 	return result;
 }
 
@@ -104,25 +45,23 @@ function flushToClipboard() {
 	if (selectedTabs.length === 0) {
 		return;
 	}
-	var urls = [];
+
+	var formattedItems = [];
 	for (i = 0; i < selectedTabs.length; i++) {
-		urls.push(formatCopyItem(selectedTabs[i]));
+		formattedItems.push(formatCopyItem(selectedTabs[i]));
 	}
-	var joinedItems = urls.join(myPreferences.getItemsDelimiter());
+
+	var joinedItems = formattedItems.join(appPreferences.getItemsDelimiter());
 	var cliptext;
-	if (urls.length == 1) {
+	if (formattedItems.length == 1) {
 		cliptext = joinedItems;
-	} else if (urls.length > 1) {
-		cliptext = myPreferences.getStartingClipboardDecorator();
-	        cliptext += joinedItems;
-		cliptext += myPreferences.getEndingClipboardDecorator();
+	} else if (formattedItems.length > 1) {
+		cliptext = appPreferences.getStartingClipboardDecorator();
+	    cliptext += joinedItems;
+		cliptext += appPreferences.getEndingClipboardDecorator();
 	}
+
 	if (cliptext) {
 		clipboard.set(cliptext);
 	}
-}
-
-function copyTabsToClipboard() {
-	flushToClipboard();
-	clearAllSelection();
 }
